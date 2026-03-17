@@ -172,7 +172,8 @@
     errorDiv.classList.add("hidden");
 
     const { data, error } = await supabase
-      .from('crm')
+      .schema('Main')
+      .from('Crm')
       .select('*')
       .order('created_at', { ascending: false });
 
