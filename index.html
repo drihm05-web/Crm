@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mini CRM • Supabase • Dominic</title>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+    window.supabase = createClient(
+      'https://vrmunobrlrmsucywsolq.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZybXVub2JybHJtc3VjeXdzb2xxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODE2MzUsImV4cCI6MjA4OTM1NzYzNX0.ZljzOKl49ENCnmN_WT0eF9W6J_-AeA4FVcs_pTI04ms'
+    );
+  </script>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --gray: #6b7280;
+      --light: #f3f4f6;
+      --danger: #dc2626;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: var(--light);
+      color: #111827;
+      line-height: 1.5;
+    }
+    .container { max-width: 1200px; margin: 0 auto; padding: 1.5rem; }
+    header { background: white; padding: 1rem 0; border-bottom: 1px solid #e5e7eb; margin-bottom: 2rem; }
+    h1 { font-size: 1.8rem; color: var(--primary-dark); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+    @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+    .card {
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    .card-header { background: var(--primary); color: white; padding: 1rem 1.5rem; font-weight: 600; }
+    form { padding: 1.5rem; }
+    label { display: block; margin-bottom: 0.5rem; font-weight: 500; }
+    input, textarea, select {
+      width: 100%;
+      padding: 0.6rem;
+      margin-bottom: 1rem;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+    button {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    .btn-primary  { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-danger   { background: var(--danger); color: white; }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-secondary { background: #e5e7eb; color: #374151; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { padding: 0.9rem 1rem; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; font-weight: 600; }
+    .actions button { margin-right: 0.5rem; font-size: 0.9rem; padding: 0.4rem 0.8rem; }
+    .customer-details { padding: 1.5rem; }
+    .notes-list { margin-top: 1.5rem; }
+    .note {
+      background: #f1f5f9;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+    .note small { color: var(--gray); display: block; margin-top: 0.4rem; }
+    .hidden { display: none; }
+    #loading, #error { text-align: center; padding: 2rem; font-style: italic; color: var(--gray); }
+    #error { color: var(--danger); }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Mini CRM (using 'crm' table)</h1>
+  </header>
+
+  <div id="loading">Loading customers from Supabase 'crm' table...</div>
+  <div id="error" class="hidden"></div>
+
+  <div class="grid-2 hidden" id="mainContent">
+    <!-- Form -->
+    <div class="card">
+      <div class="card-header">Add / Edit Customer</div>
+      <form id="customerForm">
+        <input type="hidden" id="editId" />
+        <label for="name">Full Name *</label>
+        <input type="text" id="name" required />
+        <label for="email">Email</label>
+        <input type="email" id="email" />
+        <label for="phone">Phone</label>
+        <input type="tel" id="phone" />
+        <label for="company">Company</label>
+        <input type="text" id="company" />
+        <label for="status">Status</label>
+        <select id="status">
+          <option value="Lead">Lead</option>
+          <option value="Customer">Customer</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+        <button type="submit" class="btn-primary">Save Customer</button>
+        <button type="button" id="cancelEdit" class="btn-secondary hidden">Cancel</button>
+      </form>
+    </div>
+
+    <!-- List -->
+    <div class="card">
+      <div class="card-header">Customers</div>
+      <div style="padding:1.5rem;">
+        <table id="customerTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="customerList"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail View -->
+  <div class="card hidden" id="detailView" style="margin-top:2rem;">
+    <div class="card-header">
+      <span id="detailName"></span>
+      <button id="closeDetail" style="float:right; background:#fff; color:#111827; border:1px solid #d1d5db;">× Close</button>
+    </div>
+    <div class="customer-details">
+      <p><strong>Email:</strong> <span id="detailEmail"></span></p>
+      <p><strong>Phone:</strong> <span id="detailPhone"></span></p>
+      <p><strong>Company:</strong> <span id="detailCompany"></span></p>
+      <p><strong>Status:</strong> <span id="detailStatus"></span></p>
+
+      <h3 style="margin:1.5rem 0 0.8rem;">Notes</h3>
+      <textarea id="newNote" placeholder="Add note (call, email, meeting...)" rows="3"></textarea>
+      <button id="addNoteBtn" class="btn-primary" style="margin-top:0.5rem;">Add Note</button>
+      <div class="notes-list" id="notesList"></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  const supabase = window.supabase;
+  let currentEditId = null;
+  let currentViewId = null;
+
+  const form        = document.getElementById("customerForm");
+  const cancelBtn   = document.getElementById("cancelEdit");
+  const tableBody   = document.getElementById("customerList");
+  const detailView  = document.getElementById("detailView");
+  const loading     = document.getElementById("loading");
+  const errorDiv    = document.getElementById("error");
+  const mainContent = document.getElementById("mainContent");
+
+  async function loadCustomers() {
+    loading.classList.remove("hidden");
+    mainContent.classList.add("hidden");
+    errorDiv.classList.add("hidden");
+
+    const { data, error } = await supabase
+      .from('crm')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      errorDiv.textContent = "Error loading customers: " + error.message;
+      errorDiv.classList.remove("hidden");
+      console.error(error);
+      loading.classList.add("hidden");
+      return;
+    }
+
+    renderTable(data || []);
+    loading.classList.add("hidden");
+    mainContent.classList.remove("hidden");
+  }
+
+  function renderTable(customers) {
+    tableBody.innerHTML = "";
+    customers.forEach(c => {
+      const tr = document.createElement("tr");
+      tr.style.cursor = "pointer";
+      tr.innerHTML = `
+        <td>${c.name || '—'}</td>
+        <td>${c.email || "—"}</td>
+        <td>${c.status || 'Lead'}</td>
+        <td class="actions">
+          <button class="btn-primary" onclick="editCustomer('${c.id}'); event.stopPropagation();">Edit</button>
+          <button class="btn-danger" onclick="deleteCustomer('${c.id}'); event.stopPropagation();">Delete</button>
+        </td>
+      `;
+      tr.addEventListener("click", () => showDetail(c));
+      tableBody.appendChild(tr);
+    });
+  }
+
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    const customer = {
+      name:    document.getElementById("name").value.trim(),
+      email:   document.getElementById("email").value.trim() || null,
+      phone:   document.getElementById("phone").value.trim() || null,
+      company: document.getElementById("company").value.trim() || null,
+      status:  document.getElementById("status").value,
+    };
+
+    let error;
+    if (currentEditId) {
+      ({ error } = await supabase.from('crm').update(customer).eq('id', currentEditId));
+    } else {
+      ({ error } = await supabase.from('crm').insert(customer));
+    }
+
+    if (error) {
+      alert("Save failed: " + error.message);
+      return;
+    }
+
+    form.reset();
+    currentEditId = null;
+    cancelBtn.classList.add("hidden");
+    loadCustomers();
+  });
+
+  window.editCustomer = async function(id) {
+    const { data, error } = await supabase.from('crm').select('*').eq('id', id).single();
+    if (error || !data) {
+      alert("Could not load customer: " + (error?.message || 'Not found'));
+      return;
+    }
+
+    currentEditId = id;
+    document.getElementById("name").value    = data.name || "";
+    document.getElementById("email").value   = data.email   || "";
+    document.getElementById("phone").value   = data.phone   || "";
+    document.getElementById("company").value = data.company || "";
+    document.getElementById("status").value  = data.status || "Lead";
+
+    cancelBtn.classList.remove("hidden");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  cancelBtn.addEventListener("click", () => {
+    currentEditId = null;
+    form.reset();
+    cancelBtn.classList.add("hidden");
+  });
+
+  window.deleteCustomer = async function(id) {
+    if (!confirm("Delete this customer?")) return;
+    const { error } = await supabase.from('crm').delete().eq('id', id);
+    if (error) alert("Delete failed: " + error.message);
+    else {
+      loadCustomers();
+      if (currentViewId === id) {
+        detailView.classList.add("hidden");
+        currentViewId = null;
+      }
+    }
+  };
+
+  function showDetail(c) {
+    currentViewId = c.id;
+    document.getElementById("detailName").textContent    = c.name || "—";
+    document.getElementById("detailEmail").textContent   = c.email   || "—";
+    document.getElementById("detailPhone").textContent   = c.phone   || "—";
+    document.getElementById("detailCompany").textContent = c.company || "—";
+    document.getElementById("detailStatus").textContent  = c.status  || "Lead";
+
+    renderNotes(c.notes || []);
+    detailView.classList.remove("hidden");
+    window.scrollTo({ top: detailView.offsetTop - 80, behavior: "smooth" });
+  }
+
+  document.getElementById("closeDetail").addEventListener("click", () => {
+    detailView.classList.add("hidden");
+    currentViewId = null;
+  });
+
+  function renderNotes(notes) {
+    const container = document.getElementById("notesList");
+    container.innerHTML = "";
+    notes.forEach((note, i) => {
+      const div = document.createElement("div");
+      div.className = "note";
+      div.innerHTML = `
+        ${note.text}
+        <small>${new Date(note.date).toLocaleString()}</small>
+        <button class="btn-danger" style="position:absolute;top:0.5rem;right:0.5rem;padding:0.3rem 0.6rem;font-size:0.8rem;"
+          onclick="deleteNote(${i})">×</button>
+      `;
+      container.appendChild(div);
+    });
+  }
+
+  document.getElementById("addNoteBtn").addEventListener("click", async () => {
+    const text = document.getElementById("newNote").value.trim();
+    if (!text || !currentViewId) return;
+
+    const note = { text, date: Date.now() };
+    const { data: cust, error: fetchErr } = await supabase.from('crm').select('notes').eq('id', currentViewId).single();
+    if (fetchErr) {
+      alert("Could not load notes: " + fetchErr.message);
+      return;
+    }
+    const notes = (cust?.notes || []).concat(note);
+
+    const { error } = await supabase.from('crm').update({ notes }).eq('id', currentViewId);
+    if (error) alert("Note add failed: " + error.message);
+    else {
+      document.getElementById("newNote").value = "";
+      const { data } = await supabase.from('crm').select('*').eq('id', currentViewId).single();
+      renderNotes(data?.notes || []);
+      loadCustomers();
+    }
+  });
+
+  window.deleteNote = async function(noteIndex) {
+    if (!currentViewId) return;
+    const { data: cust, error: fetchErr } = await supabase.from('crm').select('notes').eq('id', currentViewId).single();
+    if (fetchErr) return alert("Could not load notes");
+    const notes = (cust?.notes || []);
+    notes.splice(noteIndex, 1);
+
+    const { error } = await supabase.from('crm').update({ notes }).eq('id', currentViewId);
+    if (error) alert("Note delete failed: " + error.message);
+    else {
+      const { data } = await supabase.from('crm').select('*').eq('id', currentViewId).single();
+      renderNotes(data?.notes || []);
+      loadCustomers();
+    }
+  };
+
+  // Init
+  loadCustomers();
+</script>
+</body>
+</html>
