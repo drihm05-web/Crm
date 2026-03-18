@@ -1,1 +1,438 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin – Leads & Control Panel</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <style>
+    body { font-family: system-ui; background: #0f172a; color: #e2e8f0; margin:0; }
+    .container { max-width: 1400px; margin: 0 auto; padding: 1.5rem; }
+    header {
+      background: #1e293b;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card {
+      background: #1e293b;
+      border-radius: 12px;
+      border: 1px solid #334155;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+    .card-header {
+      background: #3b82f6;
+      color: white;
+      padding: 1rem 1.5rem;
+      font-weight: 600;
+    }
+    .table-container {
+      overflow-x: auto;
+      max-width: 100%;
+    }
+    table {
+      width: 100%;
+      min-width: 900px;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 0.9rem 1.2rem;
+      text-align: left;
+      border-bottom: 1px solid #334155;
+    }
+    th { background: rgba(59,130,246,0.15); }
+    .actions button {
+      padding: 0.4rem 0.9rem;
+      margin-right: 0.5rem;
+      font-size: 0.9rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .form-grid {
+      display: grid;
+      gap: 1rem;
+      padding: 1.5rem;
+    }
+    @media (min-width: 768px) {
+      .form-grid { grid-template-columns: 1fr 1fr; }
+    }
+    input, select {
+      padding: 0.8rem;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #0f172a;
+      color: white;
+    }
+    .btn {
+      padding: 0.8rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .btn-primary { background: #3b82f6; color: white; }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-danger { background: #ef4444; color: white; }
+    .btn-secondary { background: #334155; color: #e2e8f0; }
+  </style>
+</head>
+<body>
 
+<!-- Simple top nav / logout -->
+<header>
+  <h1>Admin Panel – LeadFlow</h1>
+  <div>
+    <button class="btn btn-secondary" onclick="location.href='../login.html'">Logout</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- LEADS SECTION -->
+  <div class="card">
+    <div class="card-header">Leads Management</div>
+    <div style="padding:1.5rem;">
+      <div style="margin-bottom:1.5rem;display:flex;gap:1rem;flex-wrap:wrap;">
+        <input id="searchLeads" placeholder="Search leads..." style="flex:1;min-width:200px;">
+        <button class="btn btn-primary" onclick="addLead()">+ New Lead</button>
+      </div>
+
+      <div class="table-container">
+        <table id="leadsTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Company</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="leadsBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- USERS CONTROL -->
+  <div class="card">
+    <div class="card-header">User Accounts & Restrictions</div>
+    <div style="padding:1.5rem;">
+      <div class="table-container">
+        <table id="usersTable">
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Last Login</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+      </div>
+      <button class="btn btn-primary" onclick="addUser()" style="margin-top:1rem;">+ Add User</button>
+    </div>
+  </div>
+
+  <!-- PLANS -->
+  <div class="card">
+    <div class="card-header">Subscription Plans</div>
+    <div style="padding:1.5rem;" class="form-grid">
+      <div>
+        <label>Plan Name</label>
+        <input id="planName" placeholder="e.g. Pro Monthly">
+      </div>
+      <div>
+        <label>Price (ZAR)</label>
+        <input id="planPrice" type="number" placeholder="299">
+      </div>
+      <div>
+        <label>Features (comma separated)</label>
+        <input id="planFeatures" placeholder="Unlimited leads, Quotes, Support">
+      </div>
+      <div style="grid-column:1/-1;">
+        <button class="btn btn-primary" onclick="savePlan()">Save Plan</button>
+      </div>
+    </div>
+    <div style="padding:0 1.5rem 1.5rem;">
+      <div id="plansList"></div>
+    </div>
+  </div>
+
+  <!-- DISCOUNT CODES -->
+  <div class="card">
+    <div class="card-header">Discount Codes</div>
+    <div style="padding:1.5rem;" class="form-grid">
+      <div>
+        <label>Code</label>
+        <input id="discCode" placeholder="WELCOME30" style="text-transform:uppercase;">
+      </div>
+      <div>
+        <label>Discount %</label>
+        <input id="discPercent" type="number" placeholder="30">
+      </div>
+      <div>
+        <label>Valid Until</label>
+        <input id="discExpiry" type="date">
+      </div>
+      <div style="grid-column:1/-1;">
+        <button class="btn btn-primary" onclick="saveDiscount()">Create Code</button>
+      </div>
+    </div>
+    <div style="padding:0 1.5rem 1.5rem;">
+      <div id="discountsList"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ────────────────────────────────────────────────
+//                DATA STORAGE (demo)
+// ────────────────────────────────────────────────
+let leads = JSON.parse(localStorage.getItem('leads')) || [
+  {id:1,name:"Thabo Nkosi",email:"thabo@tech.co.za",phone:"+27821234567",company:"TechNova",status:"Lead"},
+  {id:2,name:"Lerato Mthembu",email:"lerato@mzansi.co.za",phone:"+27839876543",company:"Mzansi Retail",status:"Customer"}
+];
+
+let users = JSON.parse(localStorage.getItem('users')) || [
+  {id:1,email:"admin@leadflow.co.za",role:"admin",status:"active",lastLogin:"2026-03-18"},
+  {id:2,email:"client1@example.com",role:"customer",status:"active",lastLogin:"2026-03-17"}
+];
+
+let plans = JSON.parse(localStorage.getItem('plans')) || [
+  {name:"Basic",price:99,features:"Leads, Basic Quotes"},
+  {name:"Pro",price:299,features:"Unlimited, Priority Support, Analytics"}
+];
+
+let discounts = JSON.parse(localStorage.getItem('discounts')) || [
+  {code:"WELCOME30",percent:30,expiry:"2026-06-30"}
+];
+
+// ────────────────────────────────────────────────
+//                     LEADS
+// ────────────────────────────────────────────────
+function renderLeads() {
+  const tbody = document.getElementById('leadsBody');
+  tbody.innerHTML = '';
+  const search = document.getElementById('searchLeads')?.value?.toLowerCase() || '';
+  leads.filter(l => 
+    l.name.toLowerCase().includes(search) ||
+    l.email.toLowerCase().includes(search)
+  ).forEach(l => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${l.name}</td>
+      <td>${l.email}</td>
+      <td>${l.phone}</td>
+      <td>${l.company}</td>
+      <td>${l.status}</td>
+      <td class="actions">
+        <button class="btn btn-primary" onclick="editLead(${l.id})">Edit</button>
+        <button class="btn btn-danger" onclick="deleteLead(${l.id})">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+window.editLead = (id) => {
+  alert(`Edit lead ID ${id} - full modal coming in next update`);
+};
+
+window.deleteLead = (id) => {
+  if (!confirm("Delete this lead?")) return;
+  leads = leads.filter(l => l.id !== id);
+  saveData();
+  renderLeads();
+};
+
+window.addLead = () => {
+  const name = prompt("New lead name?");
+  if (!name) return;
+  const newLead = {
+    id: Date.now(),
+    name,
+    email: prompt("Email?") || "",
+    phone: prompt("Phone?") || "",
+    company: prompt("Company?") || "",
+    status: "Lead"
+  };
+  leads.push(newLead);
+  saveData();
+  renderLeads();
+};
+
+// ────────────────────────────────────────────────
+//                     USERS
+// ────────────────────────────────────────────────
+function renderUsers() {
+  const tbody = document.getElementById('usersBody');
+  tbody.innerHTML = '';
+  users.forEach(u => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${u.email}</td>
+      <td>${u.role}</td>
+      <td>${u.status}</td>
+      <td>${u.lastLogin}</td>
+      <td>
+        <button class="btn btn-danger" onclick="toggleBan(${u.id})">
+          ${u.status === 'banned' ? 'Unban' : 'Ban'}
+        </button>
+        <button class="btn btn-secondary" onclick="changeRole(${u.id})">Change Role</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+window.toggleBan = (id) => {
+  const user = users.find(u => u.id === id);
+  user.status = user.status === 'active' ? 'banned' : 'active';
+  saveData();
+  renderUsers();
+};
+
+window.changeRole = (id) => {
+  const user = users.find(u => u.id === id);
+  const newRole = prompt("New role (admin / customer):", user.role);
+  if (newRole) {
+    user.role = newRole.toLowerCase();
+    saveData();
+    renderUsers();
+  }
+};
+
+window.addUser = () => {
+  const email = prompt("New user email?");
+  if (!email) return;
+  const role = prompt("Role (admin/customer):", "customer")?.toLowerCase() || "customer";
+  users.push({
+    id: Date.now(),
+    email,
+    role,
+    status: "active",
+    lastLogin: new Date().toISOString().split('T')[0]
+  });
+  saveData();
+  renderUsers();
+};
+
+// ────────────────────────────────────────────────
+//                     PLANS
+// ────────────────────────────────────────────────
+function renderPlans() {
+  const container = document.getElementById('plansList');
+  container.innerHTML = '';
+  plans.forEach(p => {
+    const div = document.createElement('div');
+    div.style = 'background:#0f172a;padding:1rem;border-radius:8px;margin-bottom:1rem;border:1px solid #334155;display:flex;justify-content:space-between;align-items:center;';
+    div.innerHTML = `
+      <div>
+        <strong>${p.name}</strong><br>
+        R${p.price}/mo • ${p.features}
+      </div>
+      <button class="btn btn-danger" onclick="deletePlan('${p.name}')">Delete</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+window.savePlan = () => {
+  const name = document.getElementById('planName').value.trim();
+  const price = parseInt(document.getElementById('planPrice').value);
+  const features = document.getElementById('planFeatures').value.trim();
+
+  if (!name || isNaN(price)) return alert("Fill name and price");
+
+  const existing = plans.find(p => p.name === name);
+  if (existing) {
+    existing.price = price;
+    existing.features = features;
+  } else {
+    plans.push({name, price, features});
+  }
+
+  saveData();
+  renderPlans();
+  document.getElementById('planName').value = '';
+  document.getElementById('planPrice').value = '';
+  document.getElementById('planFeatures').value = '';
+};
+
+window.deletePlan = (name) => {
+  if (!confirm("Delete plan?")) return;
+  plans = plans.filter(p => p.name !== name);
+  saveData();
+  renderPlans();
+};
+
+// ────────────────────────────────────────────────
+//                  DISCOUNT CODES
+// ────────────────────────────────────────────────
+function renderDiscounts() {
+  const container = document.getElementById('discountsList');
+  container.innerHTML = '';
+  discounts.forEach(d => {
+    const div = document.createElement('div');
+    div.style = 'background:#0f172a;padding:1rem;border-radius:8px;margin-bottom:1rem;border:1px solid #334155;display:flex;justify-content:space-between;align-items:center;';
+    div.innerHTML = `
+      <div>
+        <strong>${d.code}</strong> – ${d.percent}% off until ${d.expiry}
+      </div>
+      <button class="btn btn-danger" onclick="deleteDiscount('${d.code}')">Delete</button>
+    `;
+    container.appendChild(div);
+  });
+}
+
+window.saveDiscount = () => {
+  const code = document.getElementById('discCode').value.trim().toUpperCase();
+  const percent = parseInt(document.getElementById('discPercent').value);
+  const expiry = document.getElementById('discExpiry').value;
+
+  if (!code || isNaN(percent) || !expiry) return alert("Fill all fields");
+
+  discounts.push({code, percent, expiry});
+  saveData();
+  renderDiscounts();
+  document.getElementById('discCode').value = '';
+  document.getElementById('discPercent').value = '';
+  document.getElementById('discExpiry').value = '';
+};
+
+window.deleteDiscount = (code) => {
+  if (!confirm("Delete discount code?")) return;
+  discounts = discounts.filter(d => d.code !== code);
+  saveData();
+  renderDiscounts();
+};
+
+// ────────────────────────────────────────────────
+//                    STORAGE & INIT
+// ────────────────────────────────────────────────
+function saveData() {
+  localStorage.setItem('leads', JSON.stringify(leads));
+  localStorage.setItem('users', JSON.stringify(users));
+  localStorage.setItem('plans', JSON.stringify(plans));
+  localStorage.setItem('discounts', JSON.stringify(discounts));
+}
+
+document.getElementById('searchLeads')?.addEventListener('input', renderLeads);
+
+// Init
+renderLeads();
+renderUsers();
+renderPlans();
+renderDiscounts();
+</script>
+</body>
+</html>
