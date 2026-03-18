@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Login / Register – LeadFlow</title>
+
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
     window.supabase = createClient(
@@ -11,6 +12,7 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZybXVub2JybHJtc3VjeXdzb2xxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODE2MzUsImV4cCI6MjA4OTM1NzYzNX0.ZljzOKl49ENCnmN_WT0eF9W6J_-AeA4FVcs_pTI04ms'
     );
   </script>
+
   <style>
     body {
       font-family: system-ui, sans-serif;
@@ -44,11 +46,13 @@
       cursor: pointer;
       font-weight: 600;
       border-bottom: 3px solid transparent;
+      transition: all 0.2s;
     }
     .tab.active {
       border-bottom: 3px solid #3b82f6;
       color: #3b82f6;
     }
+    .tab:hover { background: rgba(59,130,246,0.1); }
     input {
       width: 100%;
       padding: 0.9rem;
@@ -75,6 +79,7 @@
       margin-top: 1rem;
       text-align: center;
       font-size: 0.95rem;
+      min-height: 1.2rem;
     }
     .error { color: #ef4444; }
     .success { color: #22c55e; }
@@ -84,6 +89,8 @@
       margin-top: 1.5rem;
       color: #94a3b8;
     }
+    .form-section { display: none; }
+    .form-section.active { display: block; }
   </style>
 </head>
 <body>
@@ -92,24 +99,26 @@
   <h1>LeadFlow</h1>
 
   <div class="tabs">
-    <div class="tab active" onclick="showForm('login')">Login</div>
-    <div class="tab" onclick="showForm('signup')">Register</div>
+    <div class="tab active" data-form="login">Login</div>
+    <div class="tab" data-form="signup">Register</div>
   </div>
 
-  <!-- Login Form -->
-  <form id="loginForm" style="display:block;">
-    <input type="email" id="loginEmail" placeholder="Email" required autocomplete="email">
-    <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
-    <button type="submit">Login</button>
-  </form>
+  <div id="loginForm" class="form-section active">
+    <form id="loginFormElement">
+      <input type="email" id="loginEmail" placeholder="Email" required autocomplete="email">
+      <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
+      <button type="submit">Login</button>
+    </form>
+  </div>
 
-  <!-- Signup Form (hidden by default) -->
-  <form id="signupForm" style="display:none;">
-    <input type="email" id="signupEmail" placeholder="Email" required autocomplete="email">
-    <input type="password" id="signupPassword" placeholder="Password (min 6 chars)" required minlength="6" autocomplete="new-password">
-    <input type="password" id="signupPasswordConfirm" placeholder="Confirm Password" required minlength="6">
-    <button type="submit">Create Account</button>
-  </form>
+  <div id="signupForm" class="form-section">
+    <form id="signupFormElement">
+      <input type="email" id="signupEmail" placeholder="Email" required autocomplete="email">
+      <input type="password" id="signupPassword" placeholder="Password (min 6 chars)" required minlength="6" autocomplete="new-password">
+      <input type="password" id="signupPasswordConfirm" placeholder="Confirm Password" required minlength="6">
+      <button type="submit">Create Account</button>
+    </form>
+  </div>
 
   <div id="message" class="message"></div>
 
@@ -124,17 +133,28 @@
     messageDiv.className = 'message ' + type;
   }
 
-  function showForm(formType) {
-    document.getElementById('loginForm').style.display = formType === 'login' ? 'block' : 'none';
-    document.getElementById('signupForm').style.display = formType === 'signup' ? 'block' : 'none';
+  // Tab switching (using data attributes - more reliable)
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      // Remove active from all tabs
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
 
-    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-    document.querySelector(`.tab[onclick="showForm('${formType}')"]`).classList.add('active');
-    messageDiv.textContent = '';
-  }
+      // Hide all forms
+      document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
 
-  // Login handler
-  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      // Show correct form
+      const formId = tab.dataset.form === 'login' ? 'loginForm' : 'signupForm';
+      document.getElementById(formId).classList.add('active');
+
+      showMessage(''); // clear previous messages
+    });
+  });
+
+  // ────────────────────────────────────────────────
+  //                  LOGIN HANDLER
+  // ────────────────────────────────────────────────
+  document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
@@ -149,34 +169,25 @@
     });
 
     if (error) {
-      showMessage(error.message || 'Login failed – check email/password', 'error');
-      console.error(error);
+      showMessage(error.message || 'Login failed – check credentials', 'error');
+      console.error('Login error:', error);
       return;
     }
 
-    // Success
     localStorage.setItem('access_token', data.session.access_token);
-    localStorage.setItem('refresh_token', data.session.refresh_token);
     localStorage.setItem('user_email', email);
-
-    // Simple role logic (you can make it more advanced later)
-    // For demo: if email contains "admin" → admin, else customer
-    const role = email.includes('admin') ? 'admin' : 'customer';
-    localStorage.setItem('role', role);
 
     showMessage('Login successful! Redirecting...', 'success');
 
     setTimeout(() => {
-      if (role === 'admin') {
-        window.location.href = 'admin/index.html';
-      } else {
-        window.location.href = 'customer/index.html';
-      }
-    }, 1500);
+      window.location.href = 'admin/index.html'; // or customer/ based on role logic later
+    }, 1200);
   });
 
-  // Register handler
-  document.getElementById('signupForm').addEventListener('submit', async (e) => {
+  // ────────────────────────────────────────────────
+  //                 REGISTER HANDLER
+  // ────────────────────────────────────────────────
+  document.getElementById('signupFormElement').addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const email = document.getElementById('signupEmail').value.trim();
@@ -193,23 +204,26 @@
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin + '/login.html'  // redirect back after confirmation (if enabled)
+        emailRedirectTo: window.location.origin + '/login.html'
       }
     });
 
     if (error) {
-      showMessage(error.message || 'Registration failed – try different email', 'error');
-      console.error(error);
+      showMessage(error.message || 'Registration failed – try another email', 'error');
+      console.error('Signup error:', error);
       return;
     }
 
     if (data.user) {
-      showMessage('Account created! You can now login.', 'success');
-      showForm('login');  // switch to login tab after success
+      showMessage('Account created! You can now log in.', 'success');
+      // Switch to login tab automatically
+      document.querySelector('.tab[data-form="login"]').click();
     } else {
       showMessage('Check your email to confirm (if required)', 'info');
     }
   });
+
+  console.log("Login/Register script loaded – tabs should now work");
 </script>
 </body>
 </html>
