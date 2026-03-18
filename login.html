@@ -1,58 +1,215 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login – LeadFlow</title>
-  <link rel="stylesheet" href="../assets/css/main.css">
+  <title>Login / Register – LeadFlow</title>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+    window.supabase = createClient(
+      'https://vrmunobrlrmsucywsolq.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZybXVub2JybHJtc3VjeXdzb2xxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODE2MzUsImV4cCI6MjA4OTM1NzYzNX0.ZljzOKl49ENCnmN_WT0eF9W6J_-AeA4FVcs_pTI04ms'
+    );
+  </script>
   <style>
-    body { display:flex; align-items:center; justify-content:center; min-height:100vh; background:#0f172a; color:#e2e8f0; }
-    .login-box { background:#1e293b; padding:2.5rem; border-radius:12px; width:90%; max-width:420px; border:1px solid #334155; }
-    h1 { text-align:center; margin-bottom:1.5rem; }
-    select, input { width:100%; padding:0.9rem; margin:0.6rem 0; border-radius:8px; border:1px solid #334155; background:#0f172a; color:white; font-size:1rem; }
-    button { width:100%; padding:1rem; margin-top:1rem; background:#3b82f6; color:white; border:none; border-radius:8px; font-size:1.1rem; cursor:pointer; }
-    button:hover { background:#2563eb; }
-    .back { display:block; text-align:center; margin-top:1.5rem; color:#94a3b8; }
+    body {
+      font-family: system-ui, sans-serif;
+      background: #0f172a;
+      color: #e2e8f0;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: #1e293b;
+      padding: 2.5rem;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 420px;
+      border: 1px solid #334155;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+    }
+    h1 { text-align: center; margin-bottom: 1.5rem; }
+    .tabs {
+      display: flex;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #334155;
+    }
+    .tab {
+      flex: 1;
+      padding: 0.8rem;
+      text-align: center;
+      cursor: pointer;
+      font-weight: 600;
+      border-bottom: 3px solid transparent;
+    }
+    .tab.active {
+      border-bottom: 3px solid #3b82f6;
+      color: #3b82f6;
+    }
+    input {
+      width: 100%;
+      padding: 0.9rem;
+      margin: 0.6rem 0;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #0f172a;
+      color: white;
+      font-size: 1rem;
+    }
+    button {
+      width: 100%;
+      padding: 1rem;
+      margin-top: 1rem;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+    button:hover { background: #2563eb; }
+    .message {
+      margin-top: 1rem;
+      text-align: center;
+      font-size: 0.95rem;
+    }
+    .error { color: #ef4444; }
+    .success { color: #22c55e; }
+    .back {
+      display: block;
+      text-align: center;
+      margin-top: 1.5rem;
+      color: #94a3b8;
+    }
   </style>
 </head>
 <body>
 
-<div class="login-box">
-  <h1>Login to LeadFlow</h1>
-  <label>I am:</label>
-  <select id="role">
-    <option value="admin">Business Owner / Admin</option>
-    <option value="customer">Client / Customer</option>
-  </select>
+<div class="container">
+  <h1>LeadFlow</h1>
 
-  <label>Email</label>
-  <input type="email" id="email" placeholder="you@yourbusiness.co.za" value="demo@leadflow.co.za">
+  <div class="tabs">
+    <div class="tab active" onclick="showForm('login')">Login</div>
+    <div class="tab" onclick="showForm('signup')">Register</div>
+  </div>
 
-  <button onclick="handleLogin()">Login</button>
+  <!-- Login Form -->
+  <form id="loginForm" style="display:block;">
+    <input type="email" id="loginEmail" placeholder="Email" required autocomplete="email">
+    <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
+    <button type="submit">Login</button>
+  </form>
 
-  <a href="../index.html" class="back">← Back to home</a>
+  <!-- Signup Form (hidden by default) -->
+  <form id="signupForm" style="display:none;">
+    <input type="email" id="signupEmail" placeholder="Email" required autocomplete="email">
+    <input type="password" id="signupPassword" placeholder="Password (min 6 chars)" required minlength="6" autocomplete="new-password">
+    <input type="password" id="signupPasswordConfirm" placeholder="Confirm Password" required minlength="6">
+    <button type="submit">Create Account</button>
+  </form>
+
+  <div id="message" class="message"></div>
+
+  <a href="index.html" class="back">← Back to home</a>
 </div>
 
-<script>
-function handleLogin() {
-  const role = document.getElementById('role').value;
-  const email = document.getElementById('email').value.trim();
+<script type="module">
+  const messageDiv = document.getElementById('message');
 
-  if (!email) {
-    alert("Please enter an email");
-    return;
+  function showMessage(text, type = 'info') {
+    messageDiv.textContent = text;
+    messageDiv.className = 'message ' + type;
   }
 
-  localStorage.setItem('leadflow_role', role);
-  localStorage.setItem('leadflow_email', email);
+  function showForm(formType) {
+    document.getElementById('loginForm').style.display = formType === 'login' ? 'block' : 'none';
+    document.getElementById('signupForm').style.display = formType === 'signup' ? 'block' : 'none';
 
-  if (role === 'admin') {
-    window.location.href = 'admin/index.html';
-  } else {
-    window.location.href = 'customer/index.html';
+    document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+    document.querySelector(`.tab[onclick="showForm('${formType}')"]`).classList.add('active');
+    messageDiv.textContent = '';
   }
-}
+
+  // Login handler
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+
+    if (!email || !password) return showMessage('Please fill in all fields', 'error');
+
+    showMessage('Logging in...', 'info');
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      showMessage(error.message || 'Login failed – check email/password', 'error');
+      console.error(error);
+      return;
+    }
+
+    // Success
+    localStorage.setItem('access_token', data.session.access_token);
+    localStorage.setItem('refresh_token', data.session.refresh_token);
+    localStorage.setItem('user_email', email);
+
+    // Simple role logic (you can make it more advanced later)
+    // For demo: if email contains "admin" → admin, else customer
+    const role = email.includes('admin') ? 'admin' : 'customer';
+    localStorage.setItem('role', role);
+
+    showMessage('Login successful! Redirecting...', 'success');
+
+    setTimeout(() => {
+      if (role === 'admin') {
+        window.location.href = 'admin/index.html';
+      } else {
+        window.location.href = 'customer/index.html';
+      }
+    }, 1500);
+  });
+
+  // Register handler
+  document.getElementById('signupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value;
+    const confirm = document.getElementById('signupPasswordConfirm').value;
+
+    if (!email || !password) return showMessage('Please fill in all fields', 'error');
+    if (password !== confirm) return showMessage('Passwords do not match', 'error');
+    if (password.length < 6) return showMessage('Password must be at least 6 characters', 'error');
+
+    showMessage('Creating account...', 'info');
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: window.location.origin + '/login.html'  // redirect back after confirmation (if enabled)
+      }
+    });
+
+    if (error) {
+      showMessage(error.message || 'Registration failed – try different email', 'error');
+      console.error(error);
+      return;
+    }
+
+    if (data.user) {
+      showMessage('Account created! You can now login.', 'success');
+      showForm('login');  // switch to login tab after success
+    } else {
+      showMessage('Check your email to confirm (if required)', 'info');
+    }
+  });
 </script>
-
 </body>
 </html>
