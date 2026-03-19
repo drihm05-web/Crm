@@ -5,26 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Admin Panel – LeadFlow</title>
   <link rel="stylesheet" href="../assets/css/main.css">
+  <style>
+    .sidebar { width:260px; background:#1e293b; position:fixed; height:100%; padding:1rem; }
+    .main { margin-left:260px; padding:1.5rem; }
+  </style>
 </head>
 <body>
-  <div style="padding:1.5rem;max-width:1400px;margin:0 auto;">
-    <h1>Admin Dashboard</h1>
-    <p style="color:#94a3b8;">You are logged in as Admin</p>
-
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;margin-top:2rem;">
-      <a href="leads.html" style="background:#1e293b;padding:2rem;border-radius:12px;text-align:center;border:1px solid #334155;text-decoration:none;">
-        <h2>Leads Management</h2>
-      </a>
-      <a href="#" onclick="alert('Plans page coming – editable here')" style="background:#1e293b;padding:2rem;border-radius:12px;text-align:center;border:1px solid #334155;text-decoration:none;">
-        <h2>Edit Plans</h2>
-      </a>
-      <a href="#" onclick="alert('Discounts page coming – create codes here')" style="background:#1e293b;padding:2rem;border-radius:12px;text-align:center;border:1px solid #334155;text-decoration:none;">
-        <h2>Discount Codes</h2>
-      </a>
-      <a href="#" onclick="alert('Announcements & user management here')" style="background:#1e293b;padding:2rem;border-radius:12px;text-align:center;border:1px solid #334155;text-decoration:none;">
-        <h2>User Management & Announcements</h2>
-      </a>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <h2>Admin Panel</h2>
+    <div style="margin-top:2rem;">
+      <a href="#" onclick="alert('Leads management – full access')" style="display:block;padding:0.8rem;color:#e2e8f0;">👥 Leads</a>
+      <a href="#" onclick="alert('Plans & Discounts editor')" style="display:block;padding:0.8rem;color:#e2e8f0;">📦 Plans & Discounts</a>
+      <a href="#" onclick="alert('User management & announcements')" style="display:block;padding:0.8rem;color:#e2e8f0;">👤 Users</a>
+      <a href="../login.html" style="display:block;padding:0.8rem;color:#e2e8f0;">Logout</a>
     </div>
+  </div>
+
+  <div class="main">
+    <h1>Admin Dashboard</h1>
+    <p style="color:#22c55e;">Full control mode active</p>
+    <p>Use the sidebar to manage everything.</p>
   </div>
 </body>
 </html>
