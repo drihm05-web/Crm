@@ -81,10 +81,6 @@ form input {
 }
 form input::placeholder { color: #64748b; }
 
-/* ===== EMOJIS IN INPUTS ===== */
-input#loginEmail::before, input#signupEmail::before { content: "📧 "; }
-input#loginPassword::before, input#signupPassword::before { content: "🔒 "; }
-
 /* ===== BUTTONS ===== */
 form button {
   width: 100%;
@@ -121,19 +117,20 @@ form button:hover {
 
   <!-- LOGIN FORM -->
   <form id="loginForm" class="active">
-    <input type="email" id="loginEmail" placeholder="Email" required>
-    <input type="password" id="loginPassword" placeholder="Password" required>
+    <input type="email" id="loginEmail" placeholder="📧 Email" required>
+    <input type="password" id="loginPassword" placeholder="🔒 Password" required>
     <button type="submit">Login</button>
   </form>
 
   <!-- SIGNUP FORM -->
   <form id="signupForm">
-    <input type="email" id="signupEmail" placeholder="Email" required>
-    <input type="password" id="signupPassword" placeholder="Password" required>
+    <input type="email" id="signupEmail" placeholder="📧 Email" required>
+    <input type="password" id="signupPassword" placeholder="🔒 Password" required>
     <button type="submit">Sign Up</button>
   </form>
 </div>
 
+<!-- ===== SCRIPTS ===== -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script src="assets/js/supabase.js"></script>
 <script>
@@ -160,25 +157,34 @@ signupTab.addEventListener("click", () => {
 // LOGIN HANDLER
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const email = document.getElementById("loginEmail").value;
   const password = document.getElementById("loginPassword").value;
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return alert(error.message);
+  if (!supabase) { console.error("Supabase not loaded"); return; }
 
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  // Redirect to dashboard
   window.location.href = "dashboard.html";
 });
 
 // SIGNUP HANDLER
 signupForm.addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const email = document.getElementById("signupEmail").value;
   const password = document.getElementById("signupPassword").value;
 
   const { data, error } = await supabase.auth.signUp({ email, password });
-  if (error) return alert(error.message);
 
-  // Add default role
+  if (error) { alert(error.message); return; }
+
   if (data.user) {
     await supabase.from("profiles").insert([{ id: data.user.id, role: "customer" }]);
   }
