@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Dashboard – LeadFlow</title>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <style>
+    .shop-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1.5rem; }
+    .plan-card { background:#1e293b; padding:1.5rem; border-radius:12px; border:1px solid #334155; text-align:center; }
+    .plan-card h3 { color:#3b82f6; }
+  </style>
+</head>
+<body>
+  <div style="padding:1.5rem;max-width:1200px;margin:0 auto;">
+    <h1>Welcome to Your Free Trial</h1>
+    <p style="color:#94a3b8;">Role: <strong id="userRole">free_trial</strong></p>
+
+    <h2 style="margin:2rem 0 1rem;">Available Plans</h2>
+    <div class="shop-grid" id="shopGrid">
+      <!-- Plans populated by JS -->
+    </div>
+
+    <div style="margin-top:3rem;">
+      <input id="discountCode" placeholder="Enter discount code" style="padding:0.8rem;width:300px;">
+      <button onclick="applyDiscount()" class="btn" style="background:#3b82f6;color:white;">Apply Code</button>
+    </div>
+  </div>
+
+  <script>
+    // Role protection
+    const role = localStorage.getItem('role');
+    if (!role) window.location.href = '../login.html';
+    document.getElementById('userRole').textContent = role;
+
+    const plans = [
+      {name:"Starter",price:99,desc:"Basic leads & quotes"},
+      {name:"Pro",price:299,desc:"Unlimited everything"},
+      {name:"Enterprise",price:599,desc:"Full team + support"}
+    ];
+
+    const grid = document.getElementById('shopGrid');
+    plans.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'plan-card';
+      card.innerHTML = `<h3>${p.name}</h3><h2>R${p.price}</h2><p>${p.desc}</p><button class="btn" onclick="buyPlan('${p.name}')">Choose Plan</button>`;
+      grid.appendChild(card);
+    });
+
+    window.buyPlan = name => alert(`✅ You selected ${name} – checkout coming soon!`);
+    window.applyDiscount = () => {
+      const code = document.getElementById('discountCode').value.trim();
+      if (code) alert(`Discount code ${code} applied! (demo)`);
+    };
+  </script>
+</body>
+</html>
