@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+</head>
+<body style="background:#0f172a;color:white;">
+
+<h1>Dashboard</h1>
+
+<div id="nav"></div>
+
+<script>
+const role = localStorage.getItem("role");
+const nav = document.getElementById("nav");
+
+if (role === "admin") {
+  nav.innerHTML = `
+    <p>Admin Panel</p>
+    <button>Manage Users</button>
+    <button>View All Leads</button>
+    <button>System Settings</button>
+  `;
+}
+
+if (role === "editor") {
+  nav.innerHTML = `
+    <p>Editor Panel</p>
+    <button>Edit Leads</button>
+    <button>Create Quotes</button>
+  `;
+}
+
+if (role === "reseller") {
+  nav.innerHTML = `
+    <p>Reseller Panel</p>
+    <button>My Clients</button>
+    <button>Commissions</button>
+  `;
+}
+
+if (role === "customer") {
+  nav.innerHTML = `
+    <p>Customer Panel</p>
+    <button>My Quotes</button>
+    <button>My Profile</button>
+  `;
+}
+</script>
+
+</body>
+</html>
