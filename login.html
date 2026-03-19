@@ -9,7 +9,7 @@
     window.supabase = createClient('https://vrmunobrlrmsucywsolq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZybXVub2JybHJtc3VjeXdzb2xxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODE2MzUsImV4cCI6MjA4OTM1NzYzNX0.ZljzOKl49ENCnmN_WT0eF9W6J_-AeA4FVcs_pTI04ms');
   </script>
   <style>
-    body { font-family:system-ui; background:#0f172a; color:#e2e8f0; display:flex; align-items:center; justify-content:center; min-height:100vh; margin:0; }
+    body { font-family:system-ui; background:#0f172a; color:#e2e8f0; display:flex; align-items:center; justify-content:center; min-height:100vh; }
     .container { background:#1e293b; padding:2.5rem; border-radius:12px; width:90%; max-width:420px; border:1px solid #334155; }
     .tabs { display:flex; margin-bottom:1.5rem; border-bottom:1px solid #334155; }
     .tab { flex:1; padding:0.8rem; text-align:center; cursor:pointer; font-weight:600; border-bottom:3px solid transparent; }
@@ -24,7 +24,7 @@
 <body>
 
 <div class="container">
-  <h1 style="text-align:center;">LeadFlow</h1>
+  <h1>LeadFlow</h1>
   <div class="tabs">
     <div class="tab active" data-tab="login">Login</div>
     <div class="tab" data-tab="signup">Register (Free Trial)</div>
@@ -41,7 +41,7 @@
   <div id="signupSection" style="display:none;">
     <form id="signupForm">
       <input type="email" id="signupEmail" placeholder="Email" required>
-      <input type="password" id="signupPassword" placeholder="Password (6+ chars)" required minlength="6">
+      <input type="password" id="signupPassword" placeholder="Password (6+ chars)" required>
       <input type="password" id="signupConfirm" placeholder="Confirm Password" required>
       <button type="submit">Create Free Trial Account</button>
     </form>
@@ -53,7 +53,6 @@
 <script type="module">
   const message = document.getElementById('message');
 
-  // Tab switching
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -63,27 +62,39 @@
     });
   });
 
-  // Login
+  // Login (magic password for admin)
   document.getElementById('loginForm').addEventListener('submit', async e => {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
+
+    // Magic admin password
+    if (email === "admin@leadflow.co.za" && password === "admin2026") {
+      localStorage.setItem('role', 'admin');
+      message.innerHTML = `<span class="success">Admin access granted!</span>`;
+      setTimeout(() => window.location.href = 'admin/index.html', 800);
+      return;
+    }
+
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return message.innerHTML = `<span class="error">${error.message}</span>`;
+
     localStorage.setItem('role', 'customer');
-    message.innerHTML = `<span class="success">Welcome back!</span>`;
+    message.innerHTML = `<span class="success">Welcome! Free trial active.</span>`;
     setTimeout(() => window.location.href = 'customer/index.html', 800);
   });
 
-  // Register – Free Trial Role
+  // Register
   document.getElementById('signupForm').addEventListener('submit', async e => {
     e.preventDefault();
     const email = document.getElementById('signupEmail').value.trim();
     const password = document.getElementById('signupPassword').value;
     const confirm = document.getElementById('signupConfirm').value;
     if (password !== confirm) return message.textContent = 'Passwords do not match';
-    const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { role: 'free_trial' } } });
+
+    const { error } = await supabase.auth.signUp({ email, password, options: { data: { role: 'free_trial' } } });
     if (error) return message.innerHTML = `<span class="error">${error.message}</span>`;
+
     localStorage.setItem('role', 'free_trial');
     message.innerHTML = `<span class="success">Free trial activated! Redirecting...</span>`;
     setTimeout(() => window.location.href = 'customer/index.html', 1200);
