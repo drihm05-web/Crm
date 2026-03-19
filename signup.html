@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sign Up - LeadFlow</title>
+</head>
+<body style="background:#0f172a;color:white;font-family:sans-serif;">
+
+<h2>Sign Up</h2>
+
+<form id="signupForm">
+  <input type="email" id="email" placeholder="Email" required><br><br>
+  <input type="password" id="password" placeholder="Password" required><br><br>
+  <button type="submit">Create Account</button>
+</form>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script>
+const supabase = window.supabase.createClient(
+  "YOUR_URL",
+  "YOUR_ANON_KEY"
+);
+
+document.getElementById("signupForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password
+  });
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  // Insert into profiles table
+  await supabase.from("profiles").insert([
+    {
+      id: data.user.id,
+      role: "customer"
+    }
+  ]);
+
+  alert("Account created! Please login.");
+  window.location.href = "login.html";
+});
+</script>
+
+</body>
+</html>
