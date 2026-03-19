@@ -3,33 +3,150 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>My Dashboard – LeadFlow</title>
-  <link rel="stylesheet" href="../assets/css/main.css">
+  <title>LeadFlow CRM</title>
+  <script type="module">
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+    window.supabase = createClient('https://vrmunobrlrmsucywsolq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZybXVub2JybHJtc3VjeXdzb2xxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODE2MzUsImV4cCI6MjA4OTM1NzYzNX0.ZljzOKl49ENCnmN_WT0eF9W6J_-AeA4FVcs_pTI04ms');
+  </script>
   <style>
-    .sidebar { width:260px; background:#1e293b; position:fixed; height:100%; padding:1rem; }
-    .main { margin-left:260px; padding:1.5rem; }
-    .free-trial-banner { background:#3b82f6; color:white; padding:1rem; border-radius:8px; text-align:center; margin-bottom:1.5rem; }
+    :root {--bg:#0f172a;--text:#e2e8f0;--card:#1e293b;--primary:#3b82f6;--danger:#ef4444;}
+    [data-theme="light"] {--bg:#f8fafc;--text:#0f172a;--card:#ffffff;--primary:#2563eb;--danger:#dc2626;}
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{font-family:system-ui;background:var(--bg);color:var(--text);display:flex;min-height:100vh;}
+    .sidebar{width:260px;background:var(--card);padding:1rem;position:fixed;height:100%;transition:0.3s;border-right:1px solid #334155;}
+    .sidebar.collapsed{width:65px;}
+    .main{margin-left:260px;flex:1;padding:1.5rem;transition:0.3s;}
+    .sidebar.collapsed+.main{margin-left:65px;}
+    .nav-item{padding:0.9rem 1rem;display:flex;gap:10px;cursor:pointer;border-radius:8px;}
+    .nav-item:hover,.nav-item.active{background:var(--primary);color:white;}
+    .card{background:var(--card);border-radius:12px;border:1px solid #334155;padding:1.5rem;margin-bottom:1.5rem;}
+    input,select,textarea{width:100%;padding:0.8rem;margin:0.5rem 0;border-radius:8px;background:var(--bg);color:var(--text);border:1px solid #334155;}
+    button{padding:0.8rem 1.5rem;border:none;border-radius:8px;cursor:pointer;font-weight:600;}
+    .btn-primary{background:var(--primary);color:white;}
+    .btn-danger{background:var(--danger);color:white;}
+    .free-trial-banner{background:#3b82f6;color:white;padding:1rem;border-radius:8px;text-align:center;margin-bottom:1.5rem;}
+    @media(max-width:768px){.sidebar{transform:translateX(-100%);}.sidebar.open{transform:translateX(0);width:260px;}.main{margin-left:0;}}
   </style>
 </head>
 <body>
-  <!-- Sidebar Navigation -->
-  <div class="sidebar">
-    <h2>LeadFlow</h2>
-    <div style="margin-top:2rem;">
-      <a href="index.html" style="display:block;padding:0.8rem;color:#e2e8f0;text-decoration:none;">🏠 Dashboard</a>
-      <a href="#" onclick="alert('Leads page – max 5 allowed in free trial')" style="display:block;padding:0.8rem;color:#e2e8f0;text-decoration:none;">👥 My Leads (5/5)</a>
-      <a href="#" onclick="alert('Quotes page coming soon')" style="display:block;padding:0.8rem;color:#e2e8f0;text-decoration:none;">📄 My Quotes</a>
-      <a href="../login.html" style="display:block;padding:0.8rem;color:#e2e8f0;text-decoration:none;">Logout</a>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <h2 style="padding:0 1rem;">LeadFlow</h2>
+  <div style="margin-top:2rem;">
+    <div class="nav-item active" onclick="showSection(0)">🏠 Dashboard</div>
+    <div class="nav-item" onclick="showSection(1)">👥 Leads</div>
+    <div class="nav-item" onclick="showSection(2)">📄 Quotes</div>
+    <div class="nav-item" onclick="showSection(3)">🛒 Shop / Plans</div>
+    <div class="nav-item" onclick="showSection(4)">📢 Announcements</div>
+    <div class="nav-item" onclick="logout()">Logout</div>
+  </div>
+</aside>
+
+<main class="main">
+  <header style="background:var(--card);padding:1rem;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">
+    <h1 id="pageTitle">Dashboard</h1>
+    <button onclick="toggleTheme()" style="background:var(--card);border:1px solid #334155;padding:0.5rem 1rem;border-radius:8px;">🌙 Light/Dark</button>
+  </header>
+
+  <!-- DASHBOARD -->
+  <div id="section0" class="section active">
+    <div class="free-trial-banner" id="trialBanner">
+      <strong>Free Trial Active</strong> – You can add max 5 leads
+    </div>
+    <div class="card">
+      <h2>Welcome to LeadFlow</h2>
+      <p>Your role: <strong id="userRole">free_trial</strong></p>
     </div>
   </div>
 
-  <div class="main">
-    <div class="free-trial-banner">
-      <strong>Free Trial Active</strong><br>
-      You can add maximum <strong>5 leads</strong>. Upgrade anytime!
+  <!-- LEADS -->
+  <div id="section1" class="section" style="display:none;">
+    <button onclick="addLead()" class="btn-primary">+ New Lead</button>
+    <div class="card">
+      <div style="overflow-x:auto;">
+        <table id="leadsTable" style="width:100%;min-width:900px;">
+          <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="leadsBody"></tbody>
+        </table>
+      </div>
     </div>
-    <h1>Welcome to Your Dashboard</h1>
-    <p>Role: <strong>Free Trial</strong></p>
   </div>
+
+  <!-- ADMIN PANEL (only visible to admin) -->
+  <div id="section5" class="section" style="display:none;">
+    <div class="card">
+      <h2>Admin Control Panel</h2>
+      <button onclick="editUserDemo()" class="btn-primary">Edit Users / Change Roles</button>
+      <button onclick="manageDiscounts()" class="btn-primary">Manage Discount Codes</button>
+      <button onclick="postAnnouncement()" class="btn-primary">Post Announcement</button>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+  // Role check
+  let role = localStorage.getItem('role') || 'free_trial';
+  document.getElementById('userRole').textContent = role;
+
+  // Magic admin
+  if (role === 'admin') {
+    document.getElementById('section5').style.display = 'block';
+  }
+
+  // Demo leads (max 5 for free trial)
+  let leads = JSON.parse(localStorage.getItem('leads')) || [];
+  function renderLeads() {
+    const tbody = document.getElementById('leadsBody');
+    tbody.innerHTML = '';
+    leads.slice(0,5).forEach((l,i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${l.name}</td><td>${l.email}</td><td>${l.status}</td><td><button onclick="deleteLead(${i})" class="btn-danger">Delete</button></td>`;
+      tbody.appendChild(tr);
+    });
+  }
+  window.addLead = () => {
+    if (leads.length >= 5 && role !== 'admin') return alert("Free trial limit reached (max 5 leads)");
+    const name = prompt("Lead name?");
+    if (name) {
+      leads.push({name, email: prompt("Email?"), status:"Lead"});
+      localStorage.setItem('leads', JSON.stringify(leads));
+      renderLeads();
+    }
+  };
+  window.deleteLead = i => {
+    leads.splice(i,1);
+    localStorage.setItem('leads', JSON.stringify(leads));
+    renderLeads();
+  };
+
+  // Simple section switch
+  window.showSection = n => {
+    document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+    document.getElementById('section'+n).style.display = 'block';
+  };
+
+  // Demo admin functions
+  window.editUserDemo = () => alert("User editing panel – change roles, ban users, etc.");
+  window.manageDiscounts = () => alert("Discount codes editor – create/edit/delete codes");
+  window.postAnnouncement = () => {
+    const ann = prompt("Announcement text?");
+    if (ann) alert("✅ Announcement posted site-wide: " + ann);
+  };
+
+  window.logout = () => {
+    localStorage.clear();
+    location.reload();
+  };
+
+  window.toggleTheme = () => {
+    const current = document.documentElement.getAttribute('data-theme');
+    document.documentElement.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+  };
+
+  // Init
+  renderLeads();
+  console.log("✅ Full site loaded");
+</script>
 </body>
 </html>
