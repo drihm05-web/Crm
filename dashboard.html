@@ -1,50 +1,91 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Dashboard</title>
+  <meta charset="UTF-8">
+  <title>Dashboard - LeadFlow</title>
+  <link rel="stylesheet" href="assets/css/main.css">
 </head>
-<body style="background:#0f172a;color:white;">
+<body>
 
-<h1>Dashboard</h1>
+<div class="dashboard container">
+  <h1>Dashboard</h1>
 
-<div id="nav"></div>
+  <button class="btn" onclick="logout()">Logout</button>
+
+  <div id="nav" class="nav"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="assets/js/supabase.js"></script>
 
 <script>
-const role = localStorage.getItem("role");
-const nav = document.getElementById("nav");
+async function loadDashboard() {
+  // Check session
+  const { data: { session } } = await supabase.auth.getSession();
 
-if (role === "admin") {
-  nav.innerHTML = `
-    <p>Admin Panel</p>
-    <button>Manage Users</button>
-    <button>View All Leads</button>
-    <button>System Settings</button>
-  `;
+  if (!session) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  const user = session.user;
+
+  // Get role from DB (secure way)
+  const { data: profile, error } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
+
+  if (error || !profile) {
+    alert("Error loading profile");
+    return;
+  }
+
+  const role = profile.role;
+  const nav = document.getElementById("nav");
+
+  // Role-based UI
+  if (role === "admin") {
+    nav.innerHTML = `
+      <h3>Admin Panel</h3>
+      <button>Manage Users</button>
+      <button>All Leads</button>
+      <button>System Settings</button>
+    `;
+  }
+
+  if (role === "editor") {
+    nav.innerHTML = `
+      <h3>Editor Panel</h3>
+      <button>Edit Leads</button>
+      <button>Create Quotes</button>
+    `;
+  }
+
+  if (role === "reseller") {
+    nav.innerHTML = `
+      <h3>Reseller Panel</h3>
+      <button>Clients</button>
+      <button>Commissions</button>
+    `;
+  }
+
+  if (role === "customer") {
+    nav.innerHTML = `
+      <h3>Customer Panel</h3>
+      <button>My Quotes</button>
+      <button>My Profile</button>
+    `;
+  }
 }
 
-if (role === "editor") {
-  nav.innerHTML = `
-    <p>Editor Panel</p>
-    <button>Edit Leads</button>
-    <button>Create Quotes</button>
-  `;
+async function logout() {
+  await supabase.auth.signOut();
+  window.location.href = "login.html";
 }
 
-if (role === "reseller") {
-  nav.innerHTML = `
-    <p>Reseller Panel</p>
-    <button>My Clients</button>
-    <button>Commissions</button>
-  `;
-}
-
-if (role === "customer") {
-  nav.innerHTML = `
-    <p>Customer Panel</p>
-    <button>My Quotes</button>
-    <button>My Profile</button>
-  `;
-}
+loadDashboard();
 </script>
 
 </body>
