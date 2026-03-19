@@ -1,31 +1,30 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin – LeadFlow</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Panel – LeadFlow</title>
   <link rel="stylesheet" href="../assets/css/main.css">
 </head>
 <body>
+  <div style="padding:1.5rem;max-width:1400px;margin:0 auto;">
+    <h1>Admin Dashboard</h1>
+    <p style="color:#94a3b8;">You are logged in as Admin</p>
 
-<h1 style="padding:2rem;text-align:center;">Admin Dashboard</h1>
-
-<div style="padding:0 2rem;max-width:1200px;margin:0 auto;">
-  <p>Welcome back, Owner.</p>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-top:2rem;">
-    <a href="leads.html" style="background:#1e293b;padding:2rem;border-radius:12px;text-align:center;border:1px solid #334155;text-decoration:none;">
-      <h2>Manage Leads</h2>
-      <p>Add, edit, delete all customers</p>
-    </a>
-    <a href="quotes.html" style="background:#1e293b;padding:2rem;border-radius:12px;text-align:center;border:1px solid #334155;text-decoration:none;">
-      <h2>Quotes</h2>
-      <p>Create and send professional quotes</p>
-    </a>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem;margin-top:2rem;">
+      <a href="leads.html" style="background:#1e293b;padding:2rem;border-radius:12px;text-align:center;border:1px solid #334155;text-decoration:none;">
+        <h2>Leads Management</h2>
+      </a>
+      <a href="#" onclick="alert('Plans page coming – editable here')" style="background:#1e293b;padding:2rem;border-radius:12px;text-align:center;border:1px solid #334155;text-decoration:none;">
+        <h2>Edit Plans</h2>
+      </a>
+      <a href="#" onclick="alert('Discounts page coming – create codes here')" style="background:#1e293b;padding:2rem;border-radius:12px;text-align:center;border:1px solid #334155;text-decoration:none;">
+        <h2>Discount Codes</h2>
+      </a>
+      <a href="#" onclick="alert('Announcements & user management here')" style="background:#1e293b;padding:2rem;border-radius:12px;text-align:center;border:1px solid #334155;text-decoration:none;">
+        <h2>User Management & Announcements</h2>
+      </a>
+    </div>
   </div>
-  <p style="margin-top:3rem;text-align:center;">
-    <a href="../login.html">Switch to client view</a> | <a href="../index.html">Back to home</a>
-  </p>
-</div>
-
 </body>
 </html>
