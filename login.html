@@ -1,229 +1,54 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Login / Register – LeadFlow</title>
-
-  <script type="module">
-    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-    window.supabase = createClient(
-      'https://vrmunobrlrmsucywsolq.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZybXVub2JybHJtc3VjeXdzb2xxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODE2MzUsImV4cCI6MjA4OTM1NzYzNX0.ZljzOKl49ENCnmN_WT0eF9W6J_-AeA4FVcs_pTI04ms'
-    );
-  </script>
-
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      background: #0f172a;
-      color: #e2e8f0;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-    }
-    .container {
-      background: #1e293b;
-      padding: 2.5rem;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 420px;
-      border: 1px solid #334155;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-    }
-    h1 { text-align: center; margin-bottom: 1.5rem; }
-    .tabs {
-      display: flex;
-      margin-bottom: 1.5rem;
-      border-bottom: 1px solid #334155;
-    }
-    .tab {
-      flex: 1;
-      padding: 0.8rem;
-      text-align: center;
-      cursor: pointer;
-      font-weight: 600;
-      border-bottom: 3px solid transparent;
-      transition: all 0.2s;
-    }
-    .tab.active {
-      border-bottom: 3px solid #3b82f6;
-      color: #3b82f6;
-    }
-    .tab:hover { background: rgba(59,130,246,0.1); }
-    input {
-      width: 100%;
-      padding: 0.9rem;
-      margin: 0.6rem 0;
-      border-radius: 8px;
-      border: 1px solid #334155;
-      background: #0f172a;
-      color: white;
-      font-size: 1rem;
-    }
-    button {
-      width: 100%;
-      padding: 1rem;
-      margin-top: 1rem;
-      background: #3b82f6;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 1.1rem;
-      cursor: pointer;
-    }
-    button:hover { background: #2563eb; }
-    .message {
-      margin-top: 1rem;
-      text-align: center;
-      font-size: 0.95rem;
-      min-height: 1.2rem;
-    }
-    .error { color: #ef4444; }
-    .success { color: #22c55e; }
-    .back {
-      display: block;
-      text-align: center;
-      margin-top: 1.5rem;
-      color: #94a3b8;
-    }
-    .form-section { display: none; }
-    .form-section.active { display: block; }
-  </style>
+  <meta charset="UTF-8">
+  <title>Login - LeadFlow</title>
 </head>
-<body>
+<body style="background:#0f172a;color:white;font-family:sans-serif;">
 
-<div class="container">
-  <h1>LeadFlow</h1>
+<h2>Login</h2>
 
-  <div class="tabs">
-    <div class="tab active" data-form="login">Login</div>
-    <div class="tab" data-form="signup">Register</div>
-  </div>
+<form id="loginForm">
+  <input type="email" id="email" placeholder="Email" required><br><br>
+  <input type="password" id="password" placeholder="Password" required><br><br>
+  <button type="submit">Login</button>
+</form>
 
-  <div id="loginForm" class="form-section active">
-    <form id="loginFormElement">
-      <input type="email" id="loginEmail" placeholder="Email" required autocomplete="email">
-      <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
-      <button type="submit">Login</button>
-    </form>
-  </div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script>
+const supabase = window.supabase.createClient(
+  "YOUR_URL",
+  "YOUR_ANON_KEY"
+);
 
-  <div id="signupForm" class="form-section">
-    <form id="signupFormElement">
-      <input type="email" id="signupEmail" placeholder="Email" required autocomplete="email">
-      <input type="password" id="signupPassword" placeholder="Password (min 6 chars)" required minlength="6" autocomplete="new-password">
-      <input type="password" id="signupPasswordConfirm" placeholder="Confirm Password" required minlength="6">
-      <button type="submit">Create Account</button>
-    </form>
-  </div>
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-  <div id="message" class="message"></div>
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
 
-  <a href="index.html" class="back">← Back to home</a>
-</div>
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
 
-<script type="module">
-  const messageDiv = document.getElementById('message');
-
-  function showMessage(text, type = 'info') {
-    messageDiv.textContent = text;
-    messageDiv.className = 'message ' + type;
+  if (error) {
+    alert(error.message);
+    return;
   }
 
-  // Tab switching (using data attributes - more reliable)
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      // Remove active from all tabs
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
+  // Get user role
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", data.user.id)
+    .single();
 
-      // Hide all forms
-      document.querySelectorAll('.form-section').forEach(f => f.classList.remove('active'));
+  localStorage.setItem("role", profile.role);
 
-      // Show correct form
-      const formId = tab.dataset.form === 'login' ? 'loginForm' : 'signupForm';
-      document.getElementById(formId).classList.add('active');
-
-      showMessage(''); // clear previous messages
-    });
-  });
-
-  // ────────────────────────────────────────────────
-  //                  LOGIN HANDLER
-  // ────────────────────────────────────────────────
-  document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value;
-
-    if (!email || !password) return showMessage('Please fill in all fields', 'error');
-
-    showMessage('Logging in...', 'info');
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    if (error) {
-      showMessage(error.message || 'Login failed – check credentials', 'error');
-      console.error('Login error:', error);
-      return;
-    }
-
-    localStorage.setItem('access_token', data.session.access_token);
-    localStorage.setItem('user_email', email);
-
-    showMessage('Login successful! Redirecting...', 'success');
-
-    setTimeout(() => {
-      window.location.href = 'admin/index.html'; // or customer/ based on role logic later
-    }, 1200);
-  });
-
-  // ────────────────────────────────────────────────
-  //                 REGISTER HANDLER
-  // ────────────────────────────────────────────────
-  document.getElementById('signupFormElement').addEventListener('submit', async (e) => {
-    e.preventDefault();
-
-    const email = document.getElementById('signupEmail').value.trim();
-    const password = document.getElementById('signupPassword').value;
-    const confirm = document.getElementById('signupPasswordConfirm').value;
-
-    if (!email || !password) return showMessage('Please fill in all fields', 'error');
-    if (password !== confirm) return showMessage('Passwords do not match', 'error');
-    if (password.length < 6) return showMessage('Password must be at least 6 characters', 'error');
-
-    showMessage('Creating account...', 'info');
-
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: window.location.origin + '/login.html'
-      }
-    });
-
-    if (error) {
-      showMessage(error.message || 'Registration failed – try another email', 'error');
-      console.error('Signup error:', error);
-      return;
-    }
-
-    if (data.user) {
-      showMessage('Account created! You can now log in.', 'success');
-      // Switch to login tab automatically
-      document.querySelector('.tab[data-form="login"]').click();
-    } else {
-      showMessage('Check your email to confirm (if required)', 'info');
-    }
-  });
-
-  console.log("Login/Register script loaded – tabs should now work");
+  window.location.href = "dashboard.html";
+});
 </script>
+
 </body>
 </html>
