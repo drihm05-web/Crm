@@ -3,33 +3,33 @@
 <head>
   <meta charset="UTF-8">
   <title>Sign Up - LeadFlow</title>
+  <link rel="stylesheet" href="assets/css/main.css">
 </head>
-<body style="background:#0f172a;color:white;font-family:sans-serif;">
+<body>
 
-<h2>Sign Up</h2>
+<div class="hero">
+  <h2>Create Account</h2>
 
-<form id="signupForm">
-  <input type="email" id="email" placeholder="Email" required><br><br>
-  <input type="password" id="password" placeholder="Password" required><br><br>
-  <button type="submit">Create Account</button>
-</form>
+  <form id="signupForm">
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button class="btn btn-primary">Sign Up</button>
+  </form>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-<script>
-const supabase = window.supabase.createClient(
-  "YOUR_URL",
-  "YOUR_ANON_KEY"
-);
+<script src="assets/js/supabase.js"></script>
 
+<script>
 document.getElementById("signupForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  const emailVal = document.getElementById("email").value;
+  const passwordVal = document.getElementById("password").value;
 
   const { data, error } = await supabase.auth.signUp({
-    email,
-    password
+    email: emailVal,
+    password: passwordVal
   });
 
   if (error) {
@@ -37,13 +37,15 @@ document.getElementById("signupForm").addEventListener("submit", async (e) => {
     return;
   }
 
-  // Insert into profiles table
-  await supabase.from("profiles").insert([
-    {
-      id: data.user.id,
-      role: "customer"
-    }
-  ]);
+  // Insert role into profiles table
+  if (data.user) {
+    await supabase.from("profiles").insert([
+      {
+        id: data.user.id,
+        role: "customer"
+      }
+    ]);
+  }
 
   alert("Account created! Please login.");
   window.location.href = "login.html";
