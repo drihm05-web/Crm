@@ -6,31 +6,29 @@
   <title>Login / Register – LeadFlow</title>
   <script type="module">
     import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-    window.supabase = createClient('https://vrmunobrlrmsucywsolq.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZybXVub2JybHJtc3VjeXdzb2xxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODE2MzUsImV4cCI6MjA4OTM1NzYzNX0.ZljzOKl49ENCnmN_WT0eF9W6J_-AeA4FVcs_pTI04ms');
+    window.supabase = createClient(
+      'https://vrmunobrlrmsucywsolq.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZybXVub2JybHJtc3VjeXdzb2xxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODE2MzUsImV4cCI6MjA4OTM1NzYzNX0.ZljzOKl49ENCnmN_WT0eF9W6J_-AeA4FVcs_pTI04ms'
+    );
   </script>
   <style>
-    body { font-family:system-ui; background:#0f172a; color:#e2e8f0; display:flex; align-items:center; justify-content:center; min-height:100vh; }
-    .container { background:#1e293b; padding:2.5rem; border-radius:12px; width:90%; max-width:420px; border:1px solid #334155; }
-    .tabs { display:flex; margin-bottom:1.5rem; border-bottom:1px solid #334155; }
-    .tab { flex:1; padding:0.8rem; text-align:center; cursor:pointer; font-weight:600; border-bottom:3px solid transparent; }
-    .tab.active { border-bottom:3px solid #3b82f6; color:#3b82f6; }
+    body { font-family: system-ui; background: #0f172a; color: #e2e8f0; margin:0; display:flex; align-items:center; justify-content:center; min-height:100vh; }
+    .box { background:#1e293b; padding:2.5rem; border-radius:12px; width:90%; max-width:400px; border:1px solid #334155; }
+    h1 { text-align:center; margin-bottom:1.5rem; }
     input { width:100%; padding:0.9rem; margin:0.6rem 0; border-radius:8px; background:#0f172a; color:white; border:1px solid #334155; }
-    button { width:100%; padding:1rem; background:#3b82f6; color:white; border:none; border-radius:8px; font-size:1.1rem; cursor:pointer; }
-    .message { margin-top:1rem; text-align:center; }
-    .error { color:#ef4444; }
-    .success { color:#22c55e; }
+    button { width:100%; padding:1rem; background:#3b82f6; color:white; border:none; border-radius:8px; font-size:1.1rem; cursor:pointer; margin-top:1rem; }
+    button:hover { background:#2563eb; }
+    .switch { text-align:center; margin:1rem 0; color:#94a3b8; cursor:pointer; }
+    .message { text-align:center; margin-top:1rem; font-weight:500; }
   </style>
 </head>
 <body>
 
-<div class="container">
+<div class="box">
   <h1>LeadFlow</h1>
-  <div class="tabs">
-    <div class="tab active" data-tab="login">Login</div>
-    <div class="tab" data-tab="signup">Register (Free Trial)</div>
-  </div>
 
-  <div id="loginSection">
+  <!-- LOGIN FORM -->
+  <div id="loginBox">
     <form id="loginForm">
       <input type="email" id="loginEmail" placeholder="Email" required>
       <input type="password" id="loginPassword" placeholder="Password" required>
@@ -38,67 +36,90 @@
     </form>
   </div>
 
-  <div id="signupSection" style="display:none;">
-    <form id="signupForm">
-      <input type="email" id="signupEmail" placeholder="Email" required>
-      <input type="password" id="signupPassword" placeholder="Password (6+ chars)" required>
-      <input type="password" id="signupConfirm" placeholder="Confirm Password" required>
+  <!-- REGISTER FORM -->
+  <div id="registerBox" style="display:none;">
+    <form id="registerForm">
+      <input type="email" id="regEmail" placeholder="Email" required>
+      <input type="password" id="regPassword" placeholder="Password (min 6)" required minlength="6">
+      <input type="password" id="regConfirm" placeholder="Confirm Password" required>
       <button type="submit">Create Free Trial Account</button>
     </form>
   </div>
 
+  <div class="switch" id="switchBtn">Don't have an account? Register here</div>
   <div id="message" class="message"></div>
 </div>
 
 <script type="module">
   const message = document.getElementById('message');
+  const switchBtn = document.getElementById('switchBtn');
 
-  document.querySelectorAll('.tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      document.getElementById('loginSection').style.display = tab.dataset.tab === 'login' ? 'block' : 'none';
-      document.getElementById('signupSection').style.display = tab.dataset.tab === 'signup' ? 'block' : 'none';
-    });
+  // Toggle between login & register
+  let isLogin = true;
+  switchBtn.addEventListener('click', () => {
+    isLogin = !isLogin;
+    document.getElementById('loginBox').style.display = isLogin ? 'block' : 'none';
+    document.getElementById('registerBox').style.display = isLogin ? 'none' : 'block';
+    switchBtn.textContent = isLogin ? "Don't have an account? Register here" : "Already have an account? Login here";
+    message.textContent = '';
   });
 
-  // Login (magic password for admin)
+  // LOGIN
   document.getElementById('loginForm').addEventListener('submit', async e => {
     e.preventDefault();
     const email = document.getElementById('loginEmail').value.trim();
-    const password = document.getElementById('loginPassword').value;
+    const pass = document.getElementById('loginPassword').value;
 
-    // Magic admin password
-    if (email === "admin@leadflow.co.za" && password === "admin2026") {
+    // MAGIC ADMIN PASSWORD
+    if (email === "admin@leadflow.co.za" && pass === "admin2026") {
       localStorage.setItem('role', 'admin');
-      message.innerHTML = `<span class="success">Admin access granted!</span>`;
+      message.innerHTML = '<span style="color:#22c55e">Admin access granted!</span>';
       setTimeout(() => window.location.href = 'admin/index.html', 800);
       return;
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) return message.innerHTML = `<span class="error">${error.message}</span>`;
+    message.textContent = 'Logging in...';
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
+
+    if (error) {
+      message.innerHTML = `<span style="color:#ef4444">${error.message}</span>`;
+      return;
+    }
 
     localStorage.setItem('role', 'customer');
-    message.innerHTML = `<span class="success">Welcome! Free trial active.</span>`;
+    message.innerHTML = '<span style="color:#22c55e">Welcome back! Redirecting...</span>';
     setTimeout(() => window.location.href = 'customer/index.html', 800);
   });
 
-  // Register
-  document.getElementById('signupForm').addEventListener('submit', async e => {
+  // REGISTER (Free Trial)
+  document.getElementById('registerForm').addEventListener('submit', async e => {
     e.preventDefault();
-    const email = document.getElementById('signupEmail').value.trim();
-    const password = document.getElementById('signupPassword').value;
-    const confirm = document.getElementById('signupConfirm').value;
-    if (password !== confirm) return message.textContent = 'Passwords do not match';
+    const email = document.getElementById('regEmail').value.trim();
+    const pass = document.getElementById('regPassword').value;
+    const confirm = document.getElementById('regConfirm').value;
 
-    const { error } = await supabase.auth.signUp({ email, password, options: { data: { role: 'free_trial' } } });
-    if (error) return message.innerHTML = `<span class="error">${error.message}</span>`;
+    if (pass !== confirm) return message.textContent = 'Passwords do not match';
+    if (pass.length < 6) return message.textContent = 'Password must be at least 6 characters';
+
+    message.textContent = 'Creating free trial account...';
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password: pass,
+      options: { data: { role: 'free_trial' } }
+    });
+
+    if (error) {
+      message.innerHTML = `<span style="color:#ef4444">${error.message}</span>`;
+      return;
+    }
 
     localStorage.setItem('role', 'free_trial');
-    message.innerHTML = `<span class="success">Free trial activated! Redirecting...</span>`;
+    message.innerHTML = '<span style="color:#22c55e">Free trial activated! Redirecting to dashboard...</span>';
     setTimeout(() => window.location.href = 'customer/index.html', 1200);
   });
+
+  console.log("✅ Login page loaded – click Register or Login to test");
 </script>
 </body>
 </html>
